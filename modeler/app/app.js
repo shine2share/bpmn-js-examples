@@ -1,14 +1,35 @@
 import $ from 'jquery';
-
 import BpmnModeler from 'bpmn-js/lib/Modeler';
+
+import propertiesPanelModule from 'bpmn-js-properties-panel';
+import propertiesProviderModule from 'bpmn-js-properties-panel/lib/provider/camunda';
+import camundaModdleDescriptor from 'camunda-bpmn-moddle/resources/camunda.json';
+
+import {
+  debounce
+} from 'min-dash';
 
 import diagramXML from '../resources/newDiagram.bpmn';
 
+
 var container = $('#js-drop-zone');
 
-var modeler = new BpmnModeler({
-  container: '#js-canvas'
+var canvas = $('#js-canvas');
+
+var bpmnModeler = new BpmnModeler({
+  container: canvas,
+  propertiesPanel: {
+    parent: '#js-properties-panel'
+  },
+  additionalModules: [
+    propertiesPanelModule,
+    propertiesProviderModule
+  ],
+  moddleExtensions: {
+    camunda: camundaModdleDescriptor
+  }
 });
+container.removeClass('with-diagram');
 
 function createNewDiagram() {
   openDiagram(diagramXML);
@@ -18,7 +39,7 @@ async function openDiagram(xml) {
 
   try {
 
-    await modeler.importXML(xml);
+    await bpmnModeler.importXML(xml);
 
     container
       .removeClass('with-error')
@@ -69,7 +90,7 @@ function registerFileDrop(container, callback) {
 }
 
 
-// file drag / drop ///////////////////////
+////// file drag / drop ///////////////////////
 
 // check file api availability
 if (!window.FileList || !window.FileReader) {
@@ -118,42 +139,28 @@ $(function() {
 
     try {
 
-      const { svg } = await modeler.saveSVG();
+      const { svg } = await bpmnModeler.saveSVG();
 
       setEncoded(downloadSvgLink, 'diagram.svg', svg);
     } catch (err) {
 
-      console.error('Error happened saving svg: ', err);
+      console.error('Error happened saving SVG: ', err);
+
       setEncoded(downloadSvgLink, 'diagram.svg', null);
     }
 
     try {
 
-      const { xml } = await modeler.saveXML({ format: true });
+      const { xml } = await bpmnModeler.saveXML({ format: true });
+
       setEncoded(downloadLink, 'diagram.bpmn', xml);
     } catch (err) {
 
-      console.error('Error happened saving XML: ', err);
+      console.log('Error happened saving XML: ', err);
+
       setEncoded(downloadLink, 'diagram.bpmn', null);
     }
   }, 500);
 
-  modeler.on('commandStack.changed', exportArtifacts);
+  bpmnModeler.on('commandStack.changed', exportArtifacts);
 });
-
-
-
-// helpers //////////////////////
-
-function debounce(fn, timeout) {
-
-  var timer;
-
-  return function() {
-    if (timer) {
-      clearTimeout(timer);
-    }
-
-    timer = setTimeout(fn, timeout);
-  };
-}
