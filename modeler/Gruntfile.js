@@ -32,12 +32,12 @@ module.exports = function(grunt) {
           watch: true
         },
         files: {
-          'dist/index.js': [ 'app/**/*.js' ]
+          'dist/app.js': [ 'app/**/*.js' ]
         }
       },
       app: {
         files: {
-          'dist/index.js': [ 'app/**/*.js' ]
+          'dist/app.js': [ 'app/**/*.js' ]
         }
       }
     },
